@@ -1,0 +1,28 @@
+# Virtual environment
+venv/
+
+# Caches (downloaded models, tokenizers, etc.)
+cache/
+
+# Output
+output/
+
+# Downloaded models (setup.sh handles this)
+models/
+fonts/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Manga pages (private content)
+input/
+*.webp
+*.png
+*.jpg
+*.jpeg
+
+# OS
+.DS_Store
+Thumbs.db
