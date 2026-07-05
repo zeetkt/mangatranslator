@@ -33,7 +33,12 @@ def _detect_text_easyocr(image_bgr, lang_code="en"):
     global _easyocr_reader, _easyocr_lang
 
     h, w = image_bgr.shape[:2]
-    scale = 2.0 if max(h, w) < 2000 else 1.5
+    long_side = max(h, w)
+    scale = 1.0
+    if long_side < 1500:
+        scale = 2.0
+    elif long_side < 2500:
+        scale = 1.5
     img = cv2.resize(image_bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     filtered = cv2.bilateralFilter(gray, 9, 75, 75)
@@ -45,7 +50,7 @@ def _detect_text_easyocr(image_bgr, lang_code="en"):
 
     codes = EASY_LANGS.get(lang_code, ["en"])
     if _easyocr_reader is None or _easyocr_lang != lang_code:
-        _easyocr_reader = easyocr.Reader(codes, gpu=(OCR_DEVICE == "cuda"))
+        _easyocr_reader = easyocr.Reader(codes, gpu=False)
         _easyocr_lang = lang_code
     results = _easyocr_reader.readtext(processed, text_threshold=0.3, low_text=0.2, min_size=10)
 
