@@ -50,7 +50,7 @@ def ocr_region(image, bbox, reader, lang="ja"):
         text = reader(roi_pil)
         return text.strip()
     else:
-        results = reader.readtext(roi)
+        results = reader.readtext(roi, text_threshold=0.5, low_text=0.2, min_size=5)
         if results:
             return results[0][1].strip()
         return ""

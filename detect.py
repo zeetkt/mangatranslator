@@ -2,14 +2,21 @@ import numpy as np
 from pathlib import Path
 from ultralytics import YOLO
 
+_detector = None
+
 
 def load_detector(model_path):
+    global _detector
+    if _detector is not None:
+        return _detector
     path = Path(model_path)
     if not path.exists():
         model_id = "ogkalu/manga-text-detector-yolov8s"
         print(f"[detect] Model not found, downloading {model_id}...")
-        return YOLO(model_id)
-    return YOLO(str(path))
+        _detector = YOLO(model_id)
+    else:
+        _detector = YOLO(str(path))
+    return _detector
 
 
 def _iou(box_a, box_b):
@@ -84,7 +91,8 @@ def _merge_vertical_columns(regions, x_gap_threshold=15, y_overlap_ratio=0.3):
 
 def detect_text_regions(image, model, conf=0.25, iou=0.45):
     h, w = image.shape[:2]
-    results = model(image, conf=conf, iou=iou, verbose=False)
+    imgsz = max(640, min(max(h, w), 1280))
+    results = model(image, conf=conf, iou=iou, imgsz=imgsz, verbose=False)
     regions = []
     for result in results:
         if result.boxes is None:
