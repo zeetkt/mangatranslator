@@ -18,7 +18,7 @@ LMSTUDIO_MODEL = "gemma-4-12b-it-qat-unquantized-uncensored-heretic-i1"
 LMSTUDIO_TIMEOUT = 120
 
 YOLO_MODEL_PATH = MODELS_DIR / "manga-text-detector.pt"
-DETECTION_CONFIDENCE = 0.25
+DETECTION_CONFIDENCE = 0.15
 DETECTION_IOU = 0.45
 
 

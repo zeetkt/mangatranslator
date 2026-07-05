@@ -105,7 +105,7 @@ def translate_manga_page(image_path, output_path=None,
     detector = load_detector(YOLO_MODEL_PATH)
 
     print("[main] Detecting text regions...")
-    regions = detect_text_regions(image, detector, conf=DETECTION_CONFIDENCE, iou=DETECTION_IOU)
+    regions = detect_text_regions(image_rgb, detector, conf=DETECTION_CONFIDENCE, iou=DETECTION_IOU)
     print(f"[main] Found {len(regions)} text regions")
 
     for r in regions:
