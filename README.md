@@ -22,7 +22,7 @@ Automatically translate manga pages — detects text, reads it, translates via a
 - **LM Studio** — required. Download from [lmstudio.ai](https://lmstudio.ai/), launch it, and go to the **Server** tab → **Start Server**. The app expects it at `http://localhost:1234`.
   - Recommended model: **Gemma 4 12B** (good quality/speed balance for translation).
   - Load the model in LM Studio before running the translator.
-- **NVIDIA GPU** with ~4GB+ VRAM (CUDA) — CPU mode is possible but slow
+- **GPU (optional)** — An NVIDIA GPU with ~4GB+ VRAM accelerates YOLO detection and OCR. The app works on CPU too (slower but functional).
 - Linux, Windows, or macOS
 
 ## Quick Start
@@ -35,9 +35,11 @@ bash run.sh
 Or step by step:
 
 ```bash
-bash setup.sh     # create venv, install deps, download models
+bash setup.sh     # prompts for GPU/CPU, creates venv, installs deps, downloads models
 bash run.sh       # launch the Gradio UI
 ```
+
+> **Note:** `setup.sh` will ask whether you have an NVIDIA GPU. Choose **Yes** for CUDA acceleration or **No** for CPU-only (slower).
 
 On Windows, double-click `run.bat`.
 

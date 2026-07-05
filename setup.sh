@@ -34,8 +34,19 @@ fi
 source venv/bin/activate
 pip install --upgrade pip -q
 
+# ---- Ask for device ----
+echo ""
+echo " Do you have an NVIDIA GPU?"
+select DEVICE in "Yes (CUDA)" "No (CPU only)"; do
+    case $REPLY in
+        1) TORCH_INDEX="" ; echo " Using CUDA"; break;;
+        2) TORCH_INDEX="--index-url https://download.pytorch.org/whl/cpu" ; echo " Using CPU"; break;;
+    esac
+done
+
 # ---- Install dependencies ----
 echo " Installing dependencies (this may take a while)..."
+pip install torch torchvision $TORCH_INDEX -q
 pip install -r requirements.txt -q
 
 # ---- Patch manga-ocr ----

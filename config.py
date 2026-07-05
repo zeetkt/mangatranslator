@@ -21,7 +21,16 @@ YOLO_MODEL_PATH = MODELS_DIR / "manga-text-detector.pt"
 DETECTION_CONFIDENCE = 0.25
 DETECTION_IOU = 0.45
 
-OCR_DEVICE = "cuda"
+
+def _get_device():
+    try:
+        import torch
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        return "cpu"
+
+
+OCR_DEVICE = _get_device()
 
 INPAINT_METHOD = "opencv"
 LAMA_MODEL_PATH = MODELS_DIR / "big-lama.pt"

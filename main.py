@@ -162,7 +162,8 @@ def translate_manga_page(image_path, output_path=None,
     image_pil.save(str(output_path))
     print(f"[main] Done! Saved to: {output_path}")
 
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 def main():
