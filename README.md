@@ -2,8 +2,6 @@
 
 Automatically translate manga pages — detects text, reads it, translates via a local LLM, and renders the translation back onto the cleaned page.
 
-![screenshot](https://i.imgur.com/JlhC7cJ.png)
-
 > ⚠️ **Disclaimer** — This project is fully **vibe-coded** by a non-developer (with AI assistance). It works on my machine with my specific setup. It might break on yours. There are almost certainly bugs, edge cases, and jank. The creator is not responsible for anything that happens as a result of using this software. You've been warned.
 
 ## Features
