@@ -88,18 +88,20 @@ mangatranslator/
 
 ## Supported Languages
 
-| Source | Target |
-|--------|--------|
-| Japanese | English, French, Spanish, German, Italian, Portuguese, Russian, Chinese, Korean |
-| Chinese  | English, French, Spanish, German, Italian, Portuguese, Russian, Japanese, Korean |
-| Korean   | English, French, Spanish, German, Italian, Portuguese, Russian, Japanese, Chinese |
-| English  | French, Spanish, German, Italian, Portuguese, Russian, Japanese, Chinese, Korean |
-| French   | English, Spanish, German, Italian, Portuguese, Russian, Japanese, Chinese, Korean |
-| Spanish  | English, French, German, Italian, Portuguese, Russian, Japanese, Chinese, Korean |
-| German   | English, French, Spanish, Italian, Portuguese, Russian, Japanese, Chinese, Korean |
-| Italian  | English, French, Spanish, German, Portuguese, Russian, Japanese, Chinese, Korean |
-| Portuguese | English, French, Spanish, German, Italian, Russian, Japanese, Chinese, Korean |
-| Russian  | English, French, Spanish, German, Italian, Portuguese, Japanese, Chinese, Korean |
+All 10 languages can be translated to and from each other in any combination:
+
+- English
+- French
+- Spanish
+- German
+- Italian
+- Portuguese
+- Russian
+- Japanese
+- Chinese
+- Korean
+
+> **Note:** OCR for Japanese uses manga-ocr (specialized for manga). All other languages use EasyOCR.
 
 ## Technical Notes
 
