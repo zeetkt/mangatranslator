@@ -4,6 +4,8 @@ Automatically translate manga pages — detects text, reads it, translates via a
 
 > ⚠️ **Disclaimer** — This project is fully **vibe-coded** by a non-developer (with AI assistance). It works on my machine with my specific setup. It might break on yours. There are almost certainly bugs, edge cases, and jank. The creator is not responsible for anything that happens as a result of using this software. You've been warned.
 
+> ⚠️ **Prerequisite** — **LM Studio** must be installed, launched, and serving a model on `http://localhost:1234` before running. See [Requirements](#requirements) below.
+
 ## Features
 
 - **Text detection** — YOLOv8 model trained on manga, detects both horizontal and vertical text
@@ -17,7 +19,9 @@ Automatically translate manga pages — detects text, reads it, translates via a
 
 ## Requirements
 
-- **LM Studio** running at `http://localhost:1234` with a model loaded (tested with Gemma 4 12B)
+- **LM Studio** — required. Download from [lmstudio.ai](https://lmstudio.ai/), launch it, and go to the **Server** tab → **Start Server**. The app expects it at `http://localhost:1234`.
+  - Recommended model: **Gemma 4 12B** (good quality/speed balance for translation).
+  - Load the model in LM Studio before running the translator.
 - **NVIDIA GPU** with ~4GB+ VRAM (CUDA) — CPU mode is possible but slow
 - Linux, Windows, or macOS
 

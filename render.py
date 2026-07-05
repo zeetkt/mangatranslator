@@ -46,6 +46,10 @@ def _has_japanese(text):
     return bool(re.search(r'[\u3000-\u9fff\uff00-\uffef]', text))
 
 
+def _has_accented_latin(text):
+    return bool(re.search(r'[\u00c0-\u024f]', text))
+
+
 def _wrap_text(text, font, max_width):
     words = text.split()
     if not words:
@@ -174,14 +178,17 @@ def render_text(image_pil, regions_with_text, font_path=FONT_PATH):
         bh = bbox[3] - bbox[1]
 
         is_japanese = _has_japanese(text)
+        fp = font_path
+        if not is_japanese and _has_accented_latin(text):
+            fp = FONT_FALLBACK_PATH
 
         if is_japanese and direction == "vertical":
-            font, _ = _fit_font_size_horizontal(text, font_path, bw, bh)
+            font, _ = _fit_font_size_horizontal(text, fp, bw, bh)
             render_vertical_jp(draw, text, bbox, font)
         elif direction == "vertical":
-            font, _ = _fit_font_size_horizontal(text, font_path, bw, bh)
+            font, _ = _fit_font_size_horizontal(text, fp, bw, bh)
             render_english_in_vertical_bbox(draw, text, bbox, font)
         else:
-            font, lines = _fit_font_size_horizontal(text, font_path, bw, bh)
+            font, lines = _fit_font_size_horizontal(text, fp, bw, bh)
             render_horizontal(draw, "\n".join(lines), bbox, font)
     return image_pil

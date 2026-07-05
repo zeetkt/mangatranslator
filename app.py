@@ -1,14 +1,20 @@
 import _env  # must be first — sets local cache paths
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 import gradio as gr
 from main import translate_manga_page
 from config import LANGUAGE_MAP, INPUT_DIR, OUTPUT_DIR, GRADIO_PORT, GRADIO_SHARE
 
 
-def process_images(files, source_lang, target_lang, progress=gr.Progress()):
+def process_images(files, source_lang, target_lang, manga_name, progress=gr.Progress()):
     if not files:
         raise gr.Error("No files uploaded")
+
+    out_dir = OUTPUT_DIR
+    if manga_name and manga_name.strip():
+        out_dir = OUTPUT_DIR / manga_name.strip()
 
     results = []
     progress((0, len(files)), desc="Starting...")
@@ -21,7 +27,8 @@ def process_images(files, source_lang, target_lang, progress=gr.Progress()):
         shutil.copy2(f.name, src_copy)
 
         stem = src_copy.stem
-        out_path = OUTPUT_DIR / f"{stem}_translated.png"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"{stem}_translated.png"
 
         translate_manga_page(
             str(src_copy), str(out_path),
@@ -40,6 +47,19 @@ def process_images(files, source_lang, target_lang, progress=gr.Progress()):
     return results
 
 
+def open_output_folder():
+    path = str(OUTPUT_DIR.resolve())
+    try:
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", path])
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+    except Exception as e:
+        print(f"[app] Failed to open output folder: {e}")
+
+
 def build_ui():
     lang_choices = list(LANGUAGE_MAP.keys())
 
@@ -56,6 +76,10 @@ def build_ui():
                     choices=lang_choices, value="English",
                     label="Target Language"
                 )
+                manga_name = gr.Textbox(
+                    label="Manga Name (optional)",
+                    placeholder="e.g. One Piece",
+                )
 
             with gr.Column(scale=2):
                 files = gr.File(
@@ -64,8 +88,6 @@ def build_ui():
                     file_types=[".png", ".jpg", ".jpeg", ".webp", ".bmp"],
                 )
 
-        translate_btn = gr.Button("Translate", variant="primary", size="lg")
-
         gallery = gr.Gallery(
             label="Results (before → after)",
             columns=4,
@@ -73,10 +95,21 @@ def build_ui():
             height="auto",
         )
 
+        with gr.Row():
+            translate_btn = gr.Button("Translate", variant="primary", size="lg")
+            clear_btn = gr.ClearButton([files, manga_name, gallery], size="lg")
+            open_btn = gr.Button("Open Output Folder", size="lg")
+
         translate_btn.click(
             fn=process_images,
-            inputs=[files, source_lang, target_lang],
+            inputs=[files, source_lang, target_lang, manga_name],
             outputs=gallery,
+        )
+
+        open_btn.click(
+            fn=open_output_folder,
+            inputs=None,
+            outputs=None,
         )
 
     return demo
