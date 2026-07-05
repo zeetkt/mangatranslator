@@ -16,11 +16,60 @@ from config import (
 )
 from detect import load_detector, detect_text_regions, merge_vertical_columns
 from direction import detect_direction
-from ocr import load_ocr, ocr_region
+from ocr import load_ocr, ocr_region, _is_jp
 from translate import translate_texts
 from inpaint import inpaint_opencv, inpaint_lama
 from render import render_text
 from config import BASE_DIR
+
+
+_easyocr_reader = None
+_easyocr_lang = None
+
+
+def _detect_text_easyocr(image_bgr, lang_code="en"):
+    import easyocr
+    from ocr import EASY_LANGS
+    global _easyocr_reader, _easyocr_lang
+
+    h, w = image_bgr.shape[:2]
+    scale = 2.0 if max(h, w) < 2000 else 1.5
+    img = cv2.resize(image_bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    filtered = cv2.bilateralFilter(gray, 9, 75, 75)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(filtered)
+    sharpen = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+    sharpened = cv2.filter2D(enhanced, -1, sharpen)
+    processed = cv2.cvtColor(sharpened, cv2.COLOR_GRAY2BGR)
+
+    codes = EASY_LANGS.get(lang_code, ["en"])
+    if _easyocr_reader is None or _easyocr_lang != lang_code:
+        _easyocr_reader = easyocr.Reader(codes, gpu=(OCR_DEVICE == "cuda"))
+        _easyocr_lang = lang_code
+    results = _easyocr_reader.readtext(processed, text_threshold=0.3, low_text=0.2, min_size=10)
+
+    regions = []
+    for bbox, text, conf in results:
+        if conf < 0.3 or not text.strip():
+            continue
+        pts = bbox
+        x1 = int(min(p[0] for p in pts) / scale)
+        y1 = int(min(p[1] for p in pts) / scale)
+        x2 = int(max(p[0] for p in pts) / scale)
+        y2 = int(max(p[1] for p in pts) / scale)
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w, x2), min(h, y2)
+        if x2 - x1 < 10 or y2 - y1 < 10:
+            continue
+        regions.append({
+            "bbox": (x1, y1, x2, y2),
+            "text": text.strip(),
+            "direction": "horizontal",
+        })
+    regions.sort(key=lambda r: (-r["bbox"][1], r["bbox"][0]))
+    print(f"[main] EasyOCR found {len(regions)} text regions")
+    return regions
 
 
 def merge_text_regions(regions, x_gap=30, y_overlap=0.2):
@@ -101,29 +150,37 @@ def translate_manga_page(image_path, output_path=None,
         return
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    print("[main] Loading YOLO detector...")
-    detector = load_detector(YOLO_MODEL_PATH)
+    is_japanese = _is_jp(source_code)
 
-    print("[main] Detecting text regions...")
-    regions = detect_text_regions(image_rgb, detector, conf=DETECTION_CONFIDENCE, iou=DETECTION_IOU)
-    print(f"[main] Found {len(regions)} text regions")
+    if is_japanese:
+        print("[main] Loading YOLO detector...")
+        detector = load_detector(YOLO_MODEL_PATH)
 
-    for r in regions:
-        r["direction"] = detect_direction(image, r["bbox"])
+        print("[main] Detecting text regions...")
+        regions = detect_text_regions(image_rgb, detector, conf=DETECTION_CONFIDENCE, iou=DETECTION_IOU)
+        print(f"[main] Found {len(regions)} text regions")
 
-    regions = merge_vertical_columns(regions, x_gap_threshold=20, y_overlap_ratio=0.25)
+        for r in regions:
+            r["direction"] = detect_direction(image, r["bbox"])
 
-    regions.sort(key=lambda r: (-r["bbox"][0], r["bbox"][1]))
+        regions = merge_vertical_columns(regions, x_gap_threshold=20, y_overlap_ratio=0.25)
 
-    print("[main] Loading OCR...")
-    reader = load_ocr(lang=source_code, device=OCR_DEVICE)
+        regions.sort(key=lambda r: (-r["bbox"][0], r["bbox"][1]))
 
-    print("[main] Performing OCR...")
-    for r in regions:
-        text = ocr_region(image, r["bbox"], reader, lang=source_code)
-        r["text"] = text
-        dir_label = r.get("direction", "?")
-        print(f"  [{dir_label}] ({r['bbox']}): {text[:50]}")
+        print("[main] Loading OCR...")
+        reader = load_ocr(lang=source_code, device=OCR_DEVICE)
+
+        print("[main] Performing OCR...")
+        for r in regions:
+            text = ocr_region(image, r["bbox"], reader, lang=source_code)
+            r["text"] = text
+            dir_label = r.get("direction", "?")
+            print(f"  [{dir_label}] ({r['bbox']}): {text[:50]}")
+    else:
+        print("[main] Using EasyOCR on full image (non-Japanese text)...")
+        regions = _detect_text_easyocr(image, lang_code=source_code)
+        for r in regions:
+            print(f"  [{r['direction']}] ({r['bbox']}): {r['text'][:50]}")
 
     texts = [r.get("text", "") for r in regions if r.get("text")]
     if not texts:

@@ -89,15 +89,19 @@ def _merge_vertical_columns(regions, x_gap_threshold=15, y_overlap_ratio=0.3):
     return merged + other
 
 
-def detect_text_regions(image, model, conf=0.25, iou=0.45):
+def detect_text_regions(image, model, conf=0.15, iou=0.45):
     h, w = image.shape[:2]
     imgsz = max(640, min(max(h, w), 1280))
     results = model(image, conf=conf, iou=iou, imgsz=imgsz, verbose=False)
     regions = []
     for result in results:
         if result.boxes is None:
+            print(f"[detect] WARNING: no boxes in YOLO result (conf={conf})")
             continue
-        for box in result.boxes:
+        boxes = result.boxes
+        print(f"[detect] YOLO raw: {len(boxes)} boxes at conf={conf}")
+        for box in boxes:
+            conf_val = float(box.conf[0])
             x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
             x1 = max(0, x1)
             y1 = max(0, y1)
@@ -107,9 +111,12 @@ def detect_text_regions(image, model, conf=0.25, iou=0.45):
                 continue
             regions.append({
                 "bbox": (x1, y1, x2, y2),
-                "confidence": float(box.conf[0]),
+                "confidence": conf_val,
             })
-    return _nms(regions, iou_threshold=0.5)
+    print(f"[detect] After filtering: {len(regions)} regions")
+    kept = _nms(regions, iou_threshold=0.5)
+    print(f"[detect] After NMS: {len(kept)} regions")
+    return kept
 
 
 def merge_vertical_columns(regions, x_gap_threshold=15, y_overlap_ratio=0.3):
